@@ -4,28 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults.outlinedTextFieldColors
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,100 +15,221 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.*
 import com.example.appimc.ui.theme.AppIMCTheme
+
+//Classe principal do aplicativo
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppIMCTheme {
-                IMCScreen()
 
+            //Tema da aplicação
+            AppIMCTheme {
+                val navController = rememberNavController()
+
+                // Estados para passar dados entre telas
+                var nome by remember { mutableStateOf("") }
+                var imc by remember { mutableStateOf(0f) }
+                var categoria by remember { mutableStateOf("") }
+                var imagem by remember { mutableStateOf(0) }
+                var cor by remember { mutableStateOf(Color.White) }
+
+                //Navegação entre telas
+                NavHost(navController = navController, startDestination = "imc") {
+                    composable("imc") {
+
+                        //Tela principal para inserir dados e calcular Índice Massa Corporal
+                        IMCScreen { n, valorImc, texto, imagemRes, corResultado ->
+
+                            //Salva dos dados calculados
+                            nome = n
+                            imc = valorImc
+                            categoria = texto
+                            imagem = imagemRes
+                            cor = corResultado
+
+                            //Navega para tela de resultado
+                            navController.navigate("resultado")
+                        }
+                    }
+                    composable("resultado") {
+                        //Tela que exibe o resultado do IMC
+                        ResultadoScreen(
+                            nome = nome,
+                            imc = imc,
+                            categoria = categoria,
+                            imagemResId = imagem,
+                            cor = cor,
+                            onVoltar = { navController.popBackStack() }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-//Criar a interface IMCScreen
 @Composable
-fun IMCScreen() {
-    var peso by remember { mutableStateOf("") }
-    var altura by remember { mutableStateOf("") }
-
-
-    Box (
-        modifier = Modifier.fillMaxSize()
-    ){
-        //Imagem de fundo
-        Image(
-            painter = painterResource(id = R.drawable.fundo),
-            contentDescription = "Fundo",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-
-        )
-    }
-    //Organiza os elementos verticalmemte
-    Column (
+fun ResultadoScreen(
+    nome: String,
+    imc: Float,
+    categoria: String,
+    imagemResId: Int,
+    cor: Color,
+    onVoltar: () -> Unit
+) {
+    //Layout centralizado para exbir os dados
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 200.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-
-    ){
-        //Exibe um texto na tela
-        Text(text = "Calculadora de IMC", style
-        = MaterialTheme
-            .typography.headlineMedium
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Olá, $nome!",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary
         )
 
-        //Saídas para o utilizador inserir peso
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Seu IMC é: %.2f".format(imc),
+            style = MaterialTheme.typography.headlineMedium,
+            color = cor
+        )
+
+        Text(
+            text = "Categoria: $categoria",
+            style = MaterialTheme.typography.bodyLarge,
+            color = cor
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        //Imagem de acordo com a categoria do IMC
+        Image(
+            painter = painterResource(id = imagemResId),
+            contentDescription = "Imagem IMC",
+            modifier = Modifier
+                .width(150.dp)
+                .height(150.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        //Botão para voltar à tela anterior
+        Button(onClick = onVoltar) {
+            Text("Voltar")
+        }
+    }
+}
+
+
+@Composable
+fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
+    var nome by remember { mutableStateOf("") }
+    var peso by remember { mutableStateOf("") }
+    var altura by remember { mutableStateOf("") }
+    var erro by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 100.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Calculadora de IMC", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Campo para o nome do utilizador
+        OutlinedTextField(
+            value = nome,
+            onValueChange = { nome = it },
+            label = { Text("Nome") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            modifier = Modifier.width(250.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de Peso
         OutlinedTextField(
             value = peso,
             onValueChange = { peso = it },
             label = { Text("Peso (kg)") },
-            keyboardOptions = KeyboardOptions(keyboardType
-            = KeyboardType.Number),
-            singleLine = true,
-            modifier = Modifier.width(300.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = with(TextFieldDefaults) {
-                outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF1976D2), // azul forte
-                        unfocusedBorderColor = Color.LightGray
-
-                    )
-            }
-
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            modifier = Modifier.width(250.dp)
         )
 
-        //Saídas para o utilizador inserir altura
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de Altura
         OutlinedTextField(
             value = altura,
             onValueChange = { altura = it },
             label = { Text("Altura (m)") },
-            keyboardOptions = KeyboardOptions(keyboardType
-            = KeyboardType.Number ),
-            singleLine = true,
-            modifier = Modifier.width(300.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = with(TextFieldDefaults) {
-                outlinedTextFieldColors(
-                    focusedBorderColor = Color(0xFF1976D2), // azul forte
-                    unfocusedBorderColor = Color.LightGray
-
-                )
-            }
-
-
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            modifier = Modifier.width(250.dp)
         )
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Botão para calcular o IMC
+        Button(onClick = {
+            val pesoNum = peso.toFloatOrNull()
+            val alturaNum = altura.toFloatOrNull()
+
+            if (pesoNum != null && alturaNum != null && alturaNum > 0f && nome.isNotBlank()) {
+                val imc = pesoNum / (alturaNum * alturaNum)
+                val categoria: String
+                val cor: Color
+                val imagem: Int
+
+                //Determinar a categoria com base no valor do IMC
+
+                when {
+                    imc < 18.5 -> {
+                        categoria = "Abaixo do peso"
+                        cor = Color(0xFF2196F3) //Azul
+                        imagem = R.drawable.abaixo_peso
+                    }
+                    imc < 25 -> {
+                        categoria = "Peso normal"
+                        cor = Color(0xFF4CAF50) //Verde
+                        imagem = R.drawable.peso_normal
+                    }
+                    imc < 30 -> {
+                        categoria = "Sobrepeso"
+                        cor = Color(0xFFFFC107) //Amarelo
+                        imagem = R.drawable.sobrepeso
+                    }
+                    else -> {
+                        categoria = "Obesidade"
+                        cor = Color(0xFFE53935) //Vermelho
+                        imagem = R.drawable.obesidade1
+                    }
+                }
+
+
+                onResultado(nome, imc, categoria, imagem, cor)
+            } else {
+                erro = "Por favor, preencha todos os campos corretamente."
+            }
+        }) {
+            Text("Calcular")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        //Exibe mensagem de erro, se houver
+        if (erro.isNotBlank()) {
+            Text(text = erro, color = Color.Red)
+        }
     }
-
 }
-
-
-
-
