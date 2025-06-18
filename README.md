@@ -29,4 +29,6 @@ Ele fornece feedback visual com cores e imagens de acordo com a classificação 
 - **Android Studio**
 
 ## 📦 Como instalar e executar
+**Clonar o repositório:**
+
 
