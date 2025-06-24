@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         //Tela principal para inserir dados e calcular Índice Massa Corporal
                         IMCScreen { n, valorImc, texto, imagemRes, corResultado ->
 
-                            //Salva dos dados calculados
+                            //Salvar os dados calculados
                             nome = n
                             imc = valorImc
                             categoria = texto
@@ -149,8 +149,6 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
     var altura by remember { mutableStateOf("") }
     var erro by remember { mutableStateOf("") }
 
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -228,8 +226,8 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
                         imagem = R.drawable.sobrepeso
                     }
                     else -> {
-                        categoria = "Obesidade"
-                        cor = Color(0xFFE53935) //Vermelho
+                        categoria = "Obesidade1"
+                        cor = Color(0xFF2196F3) //Azul
                         imagem = R.drawable.obesidade1
                     }
                 }
