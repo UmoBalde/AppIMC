@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
@@ -36,6 +37,17 @@ class MainActivity : ComponentActivity() {
                 var imagem by remember { mutableStateOf(0) }
                 var cor by remember { mutableStateOf(Color.White) }
 
+                //Adicionar Imagem de fundo
+                Box (
+                    modifier = Modifier.fillMaxSize()
+                ){
+                    Image(
+                        painter = painterResource(id = R.drawable.fundo),
+                        contentDescription = "imagem de fundo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 //Navegação entre telas
                 NavHost(navController = navController, startDestination = "imc") {
                     composable("imc") {
@@ -137,6 +149,8 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
     var altura by remember { mutableStateOf("") }
     var erro by remember { mutableStateOf("") }
 
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,15 +159,17 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
     ) {
         Text("Calculadora de IMC", style = MaterialTheme.typography.headlineMedium)
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Campo para o nome do utilizador
         OutlinedTextField(
             value = nome,
             onValueChange = { nome = it },
             label = { Text("Nome") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            keyboardOptions = KeyboardOptions
+                (keyboardType = KeyboardType.Text),
             modifier = Modifier.width(250.dp)
+
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +179,8 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
             value = peso,
             onValueChange = { peso = it },
             label = { Text("Peso (kg)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions
+                (keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier.width(250.dp)
         )
 
@@ -174,7 +191,8 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
             value = altura,
             onValueChange = { altura = it },
             label = { Text("Altura (m)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions
+                (keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier.width(250.dp)
         )
 
@@ -215,7 +233,6 @@ fun IMCScreen(onResultado: (String, Float, String, Int, Color) -> Unit) {
                         imagem = R.drawable.obesidade1
                     }
                 }
-
 
                 onResultado(nome, imc, categoria, imagem, cor)
             } else {
